@@ -8,10 +8,15 @@ public class ArenaController : MonoBehaviour {
     public float DividingLineX = 0.0f;
     public float DividingLineTolerance = 0.001f;
 
+    public AudioClip PlayerDeathSound;
+    public AudioClip PuckDeathSound;
+    AudioSource _audioSource;
+
     // Use this for initialization
     void Start()
     {
         _gameController = GameObject.Find("GameController").GetComponent<GameController>();
+        _audioSource = GetComponent<AudioSource>();
     }
 
     void OnTriggerExit2D(Collider2D other)
@@ -21,16 +26,19 @@ public class ArenaController : MonoBehaviour {
             var winType = DetermineWinner(other.transform);
             // destroy puck
             Destroy(other.gameObject);
+            _audioSource.PlayOneShot(PuckDeathSound);
+
             // reset pieces
             _gameController.EndRound(winType);
             return;
         }
 
         if(IsPlayer(other))
-        {
-            // remove "life?"
+        {            
             // destroy the player
             Destroy(other.gameObject);
+            _audioSource.PlayOneShot(PlayerDeathSound);
+
             // set for respawn
             RespawnPlayer(other.gameObject);
         }

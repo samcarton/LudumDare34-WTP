@@ -2,6 +2,7 @@
 using System.Collections;
 
 public class FoodController : MonoBehaviour {
+    
 
 	// Use this for initialization
 	void Start () {
@@ -17,9 +18,8 @@ public class FoodController : MonoBehaviour {
     {
         var otherPlayerController = other.transform.GetComponent<PlayerController>();
         if (otherPlayerController)
-        {
-            Debug.Log("food trigger entered");
-            otherPlayerController.EatFood();
+        {            
+            otherPlayerController.EatFood();            
             Destroy(gameObject);
         }
     }

@@ -31,8 +31,17 @@ public class GameController : MonoBehaviour {
     List<GameObject> _foods = new List<GameObject>();
     bool _gameEnabled;
 
+    public AudioClip CountDownSound;
+    public AudioClip GoSound;
+    public AudioClip GoalSound;
+    public AudioClip WinSound;
+    public AudioClip RespawnSound;
+    AudioSource _audioSource;
+
+
     // Use this for initialization
     void Start () {
+        _audioSource = GetComponent<AudioSource>();
         SetupGame();
     }
 
@@ -53,15 +62,24 @@ public class GameController : MonoBehaviour {
     // countdown, then enable players and game
     IEnumerator GameStartCountdown()
     {
+        _audioSource.clip = CountDownSound;
+        _audioSource.Play();
         InfoText.text = "3";
         yield return new WaitForSeconds(1);
+
+        _audioSource.Play();
         InfoText.text = "2";
         yield return new WaitForSeconds(1);
+
+        _audioSource.Play();
         InfoText.text = "1";
         yield return new WaitForSeconds(1);
+
+        _audioSource.clip = GoSound;
+        _audioSource.Play();
         InfoText.text = "";
         SetPlayersEnabledState(true);
-        _gameEnabled = true;
+        _gameEnabled = true;        
     }
 
     void SetPlayersEnabledState(bool state)
@@ -81,13 +99,18 @@ public class GameController : MonoBehaviour {
     IEnumerator SpawnPlayer(int playerNumber, float waitTime)
     {
         yield return new WaitForSeconds(waitTime);
+        _audioSource.PlayOneShot(RespawnSound);
         if(playerNumber == 1)
         {
             _player1 = (GameObject) GameObject.Instantiate(Player1Object, Random.insideUnitCircle * SpawnRadius, Quaternion.identity);
+            var player1Controller = _player1.GetComponent<PlayerController>();
+            player1Controller.PlayerEnabled = true;
         }
         if(playerNumber == 2)
         {
             _player2 = (GameObject)GameObject.Instantiate(Player2Object, Random.insideUnitCircle * SpawnRadius, Quaternion.identity);
+            var player2Controller = _player2.GetComponent<PlayerController>();
+            player2Controller.PlayerEnabled = true;
         }        
     }
 
@@ -121,6 +144,8 @@ public class GameController : MonoBehaviour {
                 break;
         }
 
+        _audioSource.PlayOneShot(GoalSound);
+
         yield return new WaitForSeconds(2);
         InfoText.text = "";
 
@@ -152,6 +177,8 @@ public class GameController : MonoBehaviour {
         {
             InfoText.text = "BLUE WINS!";
         }
+
+        _audioSource.PlayOneShot(WinSound);
 
         yield return new WaitForSeconds(3);
         InfoText.text = "";

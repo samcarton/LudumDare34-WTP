@@ -33,6 +33,12 @@ public class PlayerController : MonoBehaviour {
     const string _launchButtonFormat = "P{0}Launch";
     const string _boostButtonFormat = "P{0}Boost";
 
+    public AudioClip PowerupSound;
+    public AudioClip LaunchSound;
+    public AudioClip EatFoodSound;
+    public AudioClip PlayerHitSound;
+    AudioSource _audioSource;
+
     public void EatFood(int foodValue = 1)
     {
         transform.localScale *= EatFoodMultiplier;
@@ -42,6 +48,7 @@ public class PlayerController : MonoBehaviour {
         _maxEnergy *= EatFoodMultiplier;
         RefillRate *= EatFoodMultiplier;
         LaunchEnergyDrainRate *= EatFoodMultiplier;
+        _audioSource.PlayOneShot(EatFoodSound);
     }
 
     // Use this for initialization
@@ -54,7 +61,8 @@ public class PlayerController : MonoBehaviour {
         _firing = false;
         _indicatorOffset = BaseIndicatorOffset;
         _launchEnergy = 0;
-        _rigidBody = GetComponent<Rigidbody2D>();        
+        _rigidBody = GetComponent<Rigidbody2D>();
+        _audioSource = GetComponent<AudioSource>();        
     }
     
     // Update is called once per frame
@@ -71,19 +79,25 @@ public class PlayerController : MonoBehaviour {
 
     void HandleInput()
     {
+        if(Input.GetButtonDown(LaunchButton))
+        {
+            _audioSource.clip = PowerupSound;            
+            _audioSource.Play();
+        }
         if (Input.GetButtonUp(LaunchButton))
         {
             _firing = false;
             // launch
             Launch();
-            _launchEnergy = 0;
+            _launchEnergy = 0;            
+            _audioSource.PlayOneShot(LaunchSound);
         }
         if(Input.GetButton(LaunchButton))
         {
             _rotateRate = FiringRotateRateMultiplier * RotateRate;
             _firing = true;
             return;
-        }        
+        }
 
         if (Input.GetButton(BoostButton))
         {
@@ -152,6 +166,19 @@ public class PlayerController : MonoBehaviour {
     static Vector3 GetFillScale(float fillRatio)
     {
         return new Vector3(fillRatio, fillRatio, 1);
+    }
+
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        if(PlayerHitSound == null)
+        {
+            return;
+        }
+
+        if (collision.IsWithPlayer())
+        {
+            _audioSource.PlayOneShot(PlayerHitSound);
+        }
     }
 
     string LaunchButton
