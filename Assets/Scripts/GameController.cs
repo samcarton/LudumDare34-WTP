@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
@@ -28,6 +29,7 @@ public class GameController : MonoBehaviour {
     GameObject _player2;
     GameObject _puck;
     List<GameObject> _foods = new List<GameObject>();
+    bool _gameEnabled;
 
     // Use this for initialization
     void Start () {
@@ -39,6 +41,36 @@ public class GameController : MonoBehaviour {
         _puck = (GameObject) GameObject.Instantiate(Puck, PuckStart, Quaternion.identity);
         _player1 = (GameObject) GameObject.Instantiate(Player1Object, Player1Start, Quaternion.identity);
         _player2 = (GameObject) GameObject.Instantiate(Player2Object, Player2Start, Quaternion.identity);
+
+        SetPlayersEnabledState(false);
+        
+        _gameEnabled = false;
+        
+        StopCoroutine("SpawnPlayer");
+        StartCoroutine(GameStartCountdown());
+    }
+
+    // countdown, then enable players and game
+    IEnumerator GameStartCountdown()
+    {
+        InfoText.text = "3";
+        yield return new WaitForSeconds(1);
+        InfoText.text = "2";
+        yield return new WaitForSeconds(1);
+        InfoText.text = "1";
+        yield return new WaitForSeconds(1);
+        InfoText.text = "";
+        SetPlayersEnabledState(true);
+        _gameEnabled = true;
+    }
+
+    void SetPlayersEnabledState(bool state)
+    {
+        var player1Controller = _player1.GetComponent<PlayerController>();
+        player1Controller.PlayerEnabled = state;
+
+        var player2Controller = _player2.GetComponent<PlayerController>();
+        player2Controller.PlayerEnabled = state;
     }
 
     public void RespawnPlayer(int playerNumber)
@@ -61,16 +93,46 @@ public class GameController : MonoBehaviour {
 
     public void EndRound(RoundWinType winType)
     {
-        StopAllCoroutines();
-        if(_puck != null)
+        if(Player1Score < 3 && Player2Score < 3)
+        {
+            StartCoroutine(ShowRoundEndText(winType));
+        }
+        else
+        {
+            StartCoroutine(ShowGameEndText());
+        }
+        
+    }
+
+    IEnumerator ShowRoundEndText(RoundWinType winType)
+    {
+        switch (winType)
+        {
+            case RoundWinType.Draw:
+                InfoText.text = "DRAW";
+                break;
+            case RoundWinType.Player1:
+                InfoText.text = "POINT RED";
+                break;
+            case RoundWinType.Player2:
+                InfoText.text = "POINT BLUE";
+                break;
+            default:
+                break;
+        }
+
+        yield return new WaitForSeconds(2);
+        InfoText.text = "";
+
+        if (_puck != null)
         {
             Destroy(_puck);
         }
-        if(_player1 != null)
+        if (_player1 != null)
         {
             Destroy(_player1);
         }
-        if(_player2 != null)
+        if (_player2 != null)
         {
             Destroy(_player2);
         }
@@ -80,14 +142,36 @@ public class GameController : MonoBehaviour {
         SetupGame();
     }
 
+    IEnumerator ShowGameEndText()
+    {
+        if(Player1Score == 3)
+        {
+            InfoText.text = "RED WINS!";
+        }
+        else
+        {
+            InfoText.text = "BLUE WINS!";
+        }
+
+        yield return new WaitForSeconds(3);
+        InfoText.text = "";
+        
+        SceneManager.LoadScene("Menu");
+    }
+
+    
+
     // Update is called once per frame
     void Update () {
-        _foodSpawnTimer += Time.deltaTime;
-        if(_foodSpawnTimer >= FoodSpawnTime)
+        if(_gameEnabled)
         {
-            SpawnFood();
-            _foodSpawnTimer = 0;
-        }
+            _foodSpawnTimer += Time.deltaTime;
+            if (_foodSpawnTimer >= FoodSpawnTime)
+            {
+                SpawnFood();
+                _foodSpawnTimer = 0;
+            }
+        }        
     }
 
     void SpawnFood()

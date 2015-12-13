@@ -1,8 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class PlayerController : MonoBehaviour {
-        
+public class DummyPlayer : MonoBehaviour {
+
     Vector2 _heading;
     float _energy;
     float _maxEnergy = 1;
@@ -14,13 +14,13 @@ public class PlayerController : MonoBehaviour {
     float _indicatorOffset;
 
     Rigidbody2D _rigidBody;
-    
+
     public float BaseIndicatorOffset = 1.43f;
     // The amount of additional offset that is given by 1.0 unit of energy
     public float UnitEnergyIndicatorOffset = 1.5f;
     public float RotateRate = 90;
     public float BoostedRotateRateMultiplier = 2;
-    public float FiringRotateRateMultiplier = 1/3.0f;
+    public float FiringRotateRateMultiplier = 1 / 3.0f;
 
     public float RefillRate = 0.4f;
     public float StartingEnergy = 0;
@@ -28,7 +28,6 @@ public class PlayerController : MonoBehaviour {
     public float LaunchEnergyToForceMultiplier = 1;
     public float EatFoodMultiplier = 1.2f;
 
-    public bool PlayerEnabled = true;
     public int PlayerNumber;
     const string _launchButtonFormat = "P{0}Launch";
     const string _boostButtonFormat = "P{0}Boost";
@@ -45,7 +44,8 @@ public class PlayerController : MonoBehaviour {
     }
 
     // Use this for initialization
-    void Start () {
+    void Start()
+    {
         _heading = Vector2.up;
         _indicator = transform.Find("indicator");
         _fill = transform.Find("CircleFill");
@@ -54,65 +54,24 @@ public class PlayerController : MonoBehaviour {
         _firing = false;
         _indicatorOffset = BaseIndicatorOffset;
         _launchEnergy = 0;
-        _rigidBody = GetComponent<Rigidbody2D>();        
+        _rigidBody = GetComponent<Rigidbody2D>();
     }
-    
+
     // Update is called once per frame
-    void Update () {
-        if (PlayerEnabled)
-        {
-            HandleInput();
-            UpdateEnergy();
-        }
-
-        UpdateIndicatorRotation();        
+    void Update()
+    {
+        UpdateIndicatorRotation();
+        UpdateEnergy();
         UpdateFill();
-    }       
-
-    void HandleInput()
-    {
-        if (Input.GetButtonUp(LaunchButton))
-        {
-            _firing = false;
-            // launch
-            Launch();
-            _launchEnergy = 0;
-        }
-        if(Input.GetButton(LaunchButton))
-        {
-            _rotateRate = FiringRotateRateMultiplier * RotateRate;
-            _firing = true;
-            return;
-        }        
-
-        if (Input.GetButton(BoostButton))
-        {
-            _rotateRate = BoostedRotateRateMultiplier * RotateRate;
-        }
-        else
-        {
-            _rotateRate = RotateRate;
-        }
     }
 
-    void Launch()
-    {
-        if(_launchEnergy < 0.0001f)
-        {
-            return;
-        }
-
-        var forceToApply = _heading * _launchEnergy * LaunchEnergyToForceMultiplier;
-
-        _rigidBody.AddForce(forceToApply);        
-    }
-
+    
     void UpdateIndicatorRotation()
     {
         var degreesToRotate = _rotateRate * Time.deltaTime;
         _heading = Quaternion.Euler(0, 0, degreesToRotate) * _heading;
 
-        _indicator.position = transform.position + (Vector3)(GetIndicatorOffsetForEnergy() * _heading) + new Vector3(0,0,-1);
+        _indicator.position = transform.position + (Vector3)(GetIndicatorOffsetForEnergy() * _heading) + new Vector3(0, 0, -1);
         _indicator.up = (Vector3)_heading;
     }
 
@@ -122,10 +81,10 @@ public class PlayerController : MonoBehaviour {
     }
     void UpdateEnergy()
     {
-        if(_firing)
+        if (_firing)
         {
             float deltaEnergy = LaunchEnergyDrainRate * Time.deltaTime;
-            if(_energy < deltaEnergy)
+            if (_energy < deltaEnergy)
             {
                 deltaEnergy = _energy;
             }
@@ -140,6 +99,12 @@ public class PlayerController : MonoBehaviour {
         if (_energy > _maxEnergy)
         {
             _energy = _maxEnergy;
+            RefillRate *= -1;
+        }
+        if(_energy < 0)
+        {
+            _energy = 0;
+            RefillRate *= -1;
         }
     }
 
@@ -154,9 +119,4 @@ public class PlayerController : MonoBehaviour {
         return new Vector3(fillRatio, fillRatio, 1);
     }
 
-    string LaunchButton
-    { get { return string.Format(_launchButtonFormat, PlayerNumber); } }
-
-    string BoostButton
-    { get { return string.Format(_boostButtonFormat, PlayerNumber); } }    
 }
