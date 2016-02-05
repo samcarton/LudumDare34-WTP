@@ -92,8 +92,11 @@ public class GameController : MonoBehaviour {
     }
 
     public void RespawnPlayer(int playerNumber)
-    {        
-        StartCoroutine(SpawnPlayer(playerNumber, RespawnWaitTime));
+    {
+        if (_gameEnabled)
+        { 
+            StartCoroutine(SpawnPlayer(playerNumber, RespawnWaitTime));
+        }
     }
     
     IEnumerator SpawnPlayer(int playerNumber, float waitTime)
@@ -102,20 +105,41 @@ public class GameController : MonoBehaviour {
         _audioSource.PlayOneShot(RespawnSound);
         if(playerNumber == 1)
         {
-            _player1 = (GameObject) GameObject.Instantiate(Player1Object, Random.insideUnitCircle * SpawnRadius, Quaternion.identity);
+            _player1 = (GameObject) GameObject.Instantiate(Player1Object, RestrictToNegativeX(Random.insideUnitCircle) * SpawnRadius, Quaternion.identity);
             var player1Controller = _player1.GetComponent<PlayerController>();
             player1Controller.PlayerEnabled = true;
         }
         if(playerNumber == 2)
         {
-            _player2 = (GameObject)GameObject.Instantiate(Player2Object, Random.insideUnitCircle * SpawnRadius, Quaternion.identity);
+            _player2 = (GameObject)GameObject.Instantiate(Player2Object, RestrictToPositiveX(Random.insideUnitCircle) * SpawnRadius, Quaternion.identity);
             var player2Controller = _player2.GetComponent<PlayerController>();
             player2Controller.PlayerEnabled = true;
-        }        
+        }
+    }
+
+    Vector3 RestrictToNegativeX(Vector3 vector)
+    {
+        if(vector.x>0)
+        {
+            return new Vector3(-vector.x, vector.y, vector.z);
+        }
+
+        return vector;
+    }
+
+    Vector3 RestrictToPositiveX(Vector3 vector)
+    {
+        if (vector.x < 0)
+        {
+            return new Vector3(-vector.x, vector.y, vector.z);
+        }
+
+        return vector;
     }
 
     public void EndRound(RoundWinType winType)
     {
+        _gameEnabled = false;
         if(Player1Score < 3 && Player2Score < 3)
         {
             StartCoroutine(ShowRoundEndText(winType));
